@@ -1,4 +1,5 @@
 FILENAME = 'google-10000-english-no-swears.txt'
+dictionary = []
 
 if File.exist?(FILENAME)
   dictionary = File.readlines(FILENAME).map(&:chomp)
@@ -7,7 +8,70 @@ else
   exit
 end
 
+def draw_hangman(guesses_left)
+  case guesses_left
+  when 6
+    puts "-------"
+    puts "|     |"
+    puts "|"
+    puts "|"
+    puts "|"
+    puts "|"
+    puts "|"
+  when 5
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|"
+    puts "|"
+    puts "|"
+    puts "|"
+  when 4
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|     |"
+    puts "|"
+    puts "|"
+    puts "|"
+  when 3
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|    /|"
+    puts "|"
+    puts "|"
+    puts "|"
+  when 2
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|    /|\\"
+    puts "|"
+    puts "|"
+    puts "|"
+  when 1
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|    /|\\"
+    puts "|    /"
+    puts "|"
+    puts "|"
+  when 0
+    puts "-------"
+    puts "|     |"
+    puts "|     O"
+    puts "|    /|\\"
+    puts "|    / \\"
+    puts "|"
+    puts "|"
+    puts "Game Over!"
+  end
+end
+
 secret_word = dictionary.sample
+puts secret_word
 display_word = "_" * secret_word.length
 guess_count = 6
 
@@ -31,6 +95,7 @@ while guess_count > 0
     end
   else
     puts "Incorrect guess."
+    draw_hangman(guess_count)
     guess_count -= 1
   end
 
