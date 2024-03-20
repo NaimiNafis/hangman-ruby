@@ -61,10 +61,11 @@ class Hangman
   end
 
   def conclude_game
+    display_game_state
     if @display_word == @secret_word
-      puts "Congratulations, you won! The word was '#{@secret_word}'."
+      puts "Congratulations, you won! 🎉 The word was '#{@secret_word}'."
     else
-      puts "Game over! The word was '#{@secret_word}'."
+      puts "Game over! 😢 The word was '#{@secret_word}'."
     end
   end
 
@@ -74,19 +75,27 @@ class Hangman
   end
 
   def player_guess
+    print 'Your guess (or type "save" to save, "load" to load): '
     loop do
-      print 'Please enter 1 alphabet or type "save" to save the game or "load" to load a game: '
-      input = gets.chomp.downcase
-
-      if input == 'save'
-        save_game
-      elsif input == 'load'
-        load_game
-      elsif input.match?(/\A[a-z]\z/)
+      input = gets.chomp.downcase.strip
+      case input
+      when 'save', 'load'
+        handle_special_input(input)
+      when /\A[a-z]\z/
         return input
       else
-        puts 'Invalid input. Please enter only one alphabet character, or type "save" or "load".'
+        puts 'Invalid input. Please enter a single letter or "save"/"load":'
       end
+    end
+  end
+
+  def handle_special_input(input)
+    case input
+    when 'save'
+      save_game
+    when 'load'
+      load_game
+      display_game_state
     end
   end
 
@@ -106,7 +115,6 @@ class Hangman
       puts 'No saved game found.'
     end
   end
-
 
   def process_guess(guess)
     if @secret_word.include?(guess)
