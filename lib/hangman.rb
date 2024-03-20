@@ -2,34 +2,38 @@
 
 require 'yaml'
 
+# BasicSerializable provides serialization capabilities for classes.
+# It uses YAML as the serialization format.
 module BasicSerializable
-  @@serializer = YAML
+  @serializer = YAML
+
+  class << self
+    attr_accessor :serializer
+  end
 
   def serialize
-    obj = {}
-    instance_variables.map do |var|
-      obj[var] = instance_variable_get(var)
+    obj = instance_variables.each_with_object({}) do |var, acc|
+      acc[var] = instance_variable_get(var)
     end
 
-    @@serializer.dump obj
+    self.class.serializer.dump(obj)
   end
 
   def unserialize(string)
-    obj = @@serializer.load(string)
-    obj.keys.each do |key|
+    obj = self.class.serializer.load(string)
+    obj.each_key do |key|
       instance_variable_set(key, obj[key])
     end
   end
 end
 
-
 # This class represents a Hangman game where a player tries to guess a secret word by
-# suggesting letters within a certain number of guesses (which in this case = 6)
+# suggesting letters within a certain number of guesses.
 class Hangman
   include BasicSerializable
 
   FILENAME = 'google-10000-english-no-swears.txt'
-  SAVE_FILENAME = "output/save_game.yml"
+  SAVE_FILENAME = 'output/save_game.yml'
   MAX_GUESSES = 6
 
   def initialize
@@ -101,18 +105,42 @@ class Hangman
 
   def save_game
     Dir.mkdir('output') unless Dir.exist?('output')
+    save_id = Time.now.to_i
+    save_filename = "output/save_#{save_id}.yml"
     serialized_state = serialize
-    File.open(SAVE_FILENAME, 'w') { |file| file.write(serialized_state) } # Use SAVE_FILENAME here
-    puts 'Game saved successfully!'
+    File.open(save_filename, 'w') { |file| file.write(serialized_state) }
+    puts "Game saved successfully with ID: #{save_id}"
   end
 
   def load_game
-    if File.exist?(SAVE_FILENAME)
-      serialized_state = File.read(SAVE_FILENAME)
+    puts 'Available saves:'
+    saves = Dir.glob('output/save_*.yml')
+    saves.each_with_index do |filename, index|
+      puts "#{index + 1}. #{filename}"
+    end
+
+    choice = nil
+    until choice
+      print 'Enter the number (1-4 digits) of the save to load: '
+      input = gets.chomp
+      if input.match?(/\A\d{1,4}\z/)
+        choice = input.to_i
+        if choice < 1 || choice > saves.length
+          puts "Invalid selection. Please select a number between 1 and #{saves.length}."
+          choice = nil
+        end
+      else
+        puts 'Invalid input. Please enter a 1 to 4-digit number.'
+      end
+    end
+
+    save_filename = saves[choice - 1]
+    if File.exist?(save_filename)
+      serialized_state = File.read(save_filename)
       unserialize(serialized_state)
       puts 'Game loaded successfully!'
     else
-      puts 'No saved game found.'
+      puts 'Save file not found.'
     end
   end
 
@@ -122,10 +150,9 @@ class Hangman
       update_display_word(guess)
     else
       puts 'Incorrect guess.'
-      draw_hangman(@guess_count)
       @guess_count -= 1
     end
-    save_game
+    draw_hangman
   end
 
   def update_display_word(guess)
@@ -134,7 +161,7 @@ class Hangman
     end
   end
 
-  def draw_hangman(guesses_left)
+  def draw_hangman
     stages = [
       ['  +---+', '  |   |', '      |', '      |', '      |', '      |', '========='],
       ['  +---+', '  |   |', '  O   |', '      |', '      |', '      |', '========='],
@@ -145,7 +172,7 @@ class Hangman
       ['  +---+', '  |   |', '  O   |', ' /|\\  |', ' / \\  |', '      |', 'Game Over!']
     ]
 
-    puts stages[MAX_GUESSES - guesses_left]
+    puts stages[MAX_GUESSES - @guess_count]
   end
 
   def start_game
