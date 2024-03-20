@@ -5,10 +5,14 @@ require 'yaml'
 # BasicSerializable provides serialization capabilities for classes.
 # It uses YAML as the serialization format.
 module BasicSerializable
-  @serializer = YAML
+  def self.included(base)
+    base.extend(ClassMethods)
+  end
 
-  class << self
-    attr_accessor :serializer
+  module ClassMethods
+    def serializer
+      YAML
+    end
   end
 
   def serialize
@@ -26,6 +30,7 @@ module BasicSerializable
     end
   end
 end
+
 
 # This class represents a Hangman game where a player tries to guess a secret word by
 # suggesting letters within a certain number of guesses.

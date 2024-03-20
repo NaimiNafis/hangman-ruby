@@ -9894,6 +9894,6 @@
 - mediawiki
 - configurations
 - poison
-:@secret_word: fe
-:@display_word: _e
-:@guess_count: 5
+:@secret_word: fold
+:@display_word: ___d
+:@guess_count: 6

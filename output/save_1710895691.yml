@@ -9894,6 +9894,6 @@
 - mediawiki
 - configurations
 - poison
-:@secret_word: patrick
-:@display_word: __tri__
-:@guess_count: 0
+:@secret_word: omaha
+:@display_word: _____
+:@guess_count: 4
