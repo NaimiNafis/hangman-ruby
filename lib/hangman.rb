@@ -1,9 +1,35 @@
 # frozen_string_literal: true
 
+require 'yaml'
+
+module BasicSerializable
+  @@serializer = YAML
+
+  def serialize
+    obj = {}
+    instance_variables.map do |var|
+      obj[var] = instance_variable_get(var)
+    end
+
+    @@serializer.dump obj
+  end
+
+  def unserialize(string)
+    obj = @@serializer.load(string)
+    obj.keys.each do |key|
+      instance_variable_set(key, obj[key])
+    end
+  end
+end
+
+
 # This class represents a Hangman game where a player tries to guess a secret word by
 # suggesting letters within a certain number of guesses (which in this case = 6)
 class Hangman
+  include BasicSerializable
+
   FILENAME = 'google-10000-english-no-swears.txt'
+  SAVE_FILENAME = "output/save_game.yml"
   MAX_GUESSES = 6
 
   def initialize
@@ -49,13 +75,38 @@ class Hangman
 
   def player_guess
     loop do
-      print 'Please enter 1 alphabet: '
-      guess = gets.chomp.downcase
-      return guess if guess.match?(/\A[a-z]\z/)
+      print 'Please enter 1 alphabet or type "save" to save the game or "load" to load a game: '
+      input = gets.chomp.downcase
 
-      puts 'Please enter only one alphabet character.'
+      if input == 'save'
+        save_game
+      elsif input == 'load'
+        load_game
+      elsif input.match?(/\A[a-z]\z/)
+        return input
+      else
+        puts 'Invalid input. Please enter only one alphabet character, or type "save" or "load".'
+      end
     end
   end
+
+  def save_game
+    Dir.mkdir('output') unless Dir.exist?('output')
+    serialized_state = serialize
+    File.open(SAVE_FILENAME, 'w') { |file| file.write(serialized_state) } # Use SAVE_FILENAME here
+    puts 'Game saved successfully!'
+  end
+
+  def load_game
+    if File.exist?(SAVE_FILENAME)
+      serialized_state = File.read(SAVE_FILENAME)
+      unserialize(serialized_state)
+      puts 'Game loaded successfully!'
+    else
+      puts 'No saved game found.'
+    end
+  end
+
 
   def process_guess(guess)
     if @secret_word.include?(guess)
@@ -66,6 +117,7 @@ class Hangman
       draw_hangman(@guess_count)
       @guess_count -= 1
     end
+    save_game
   end
 
   def update_display_word(guess)
